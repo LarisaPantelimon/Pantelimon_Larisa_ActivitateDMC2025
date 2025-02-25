@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Aplicatia mea</string>
-    <string name="button_text">Apasa-ma</string>
-    <string name="PlainText">Ceva Text</string>
-    <string name="NewText">Bun venit la Android</string>
+    <string name="app_name">mi aplicacion</string>
+    <string name="button_text">Presioname</string>
+    <string name="PlainText">Algún texto plano</string>
+    <string name="NewText">Bienvenido a Android</string>
 </resources>
