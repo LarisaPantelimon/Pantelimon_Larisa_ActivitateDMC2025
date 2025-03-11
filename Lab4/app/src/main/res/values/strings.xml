@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Lab4</string>
+    <string name="hello">Introdu atribute</string>
+    <string name="culoare">Culoare:</string>
+    <string name="impermeabil">Impermeabil:</string>
+    <string name="marime">Marime:</string>
+    <string name="pret">Pret:</string>
+    <string name="material">Material:</string>
+    <string name="send">Trimite:</string>
+    <string name="da_nu">Nu/Da:</string>
+    <string name="material1">Lana</string>
+    <string name="material2">Bumbac</string>
+    <string name="material3">Poliester</string>
+    <string name="cevapret">300RON</string>
+</resources>
