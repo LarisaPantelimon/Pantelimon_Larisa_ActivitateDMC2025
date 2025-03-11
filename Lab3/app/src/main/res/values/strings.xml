@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Lab3</string>
+    <string name="open_button">Deschide activitatea</string>
+    <string name="salut">Salut din MainActivity2!</string>
+    <string name="default_text">Aici vor apărea datele</string>
+    <string name="mesaj_implicit">Mesaj implicit</string>
+    <string name="send_back">Calculeaza</string>
+</resources>
