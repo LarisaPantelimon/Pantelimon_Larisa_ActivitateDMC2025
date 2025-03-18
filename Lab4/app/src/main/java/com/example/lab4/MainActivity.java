@@ -1,69 +1,81 @@
 package com.example.lab4;
 
-import android.content.Intent;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Toast;
-
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import android.content.Intent;
+
+import com.example.lab4.Palton;
+import com.example.lab4.R;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int REQUEST_CODE = 1; // Codul de rezultat pentru activitatea MainActivity2
+
+    private static final int REQUEST_CODE_ADD_PALTON = 1;
+    private ArrayList<Palton> listaPaltoane;
+    private ArrayAdapter<Palton> adapter;
+    private ListView listViewPaltoane;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button btnAdaugaPalton = findViewById(R.id.button);
+        listViewPaltoane = findViewById(R.id.listViewPaltoane);
+        listaPaltoane = new ArrayList<>();
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, listaPaltoane);
+        listViewPaltoane.setAdapter(adapter);
 
-        // Deschidem activitatea MainActivity2 atunci când butonul este apăsat
-        btnAdaugaPalton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Deschide activitatea MainActivity2 cu startActivityForResult
-                Intent intent = new Intent(MainActivity.this, MainActivity2.class);
-                startActivityForResult(intent, REQUEST_CODE);
-            }
+        // Deschidem activitatea de adăugare
+        findViewById(R.id.button).setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, MainActivity2.class);
+            startActivityForResult(intent, REQUEST_CODE_ADD_PALTON);
+        });
+
+        // Afișăm un Toast când se selectează un element
+        listViewPaltoane.setOnItemClickListener((parent, view, position, id) -> {
+            Palton palton = listaPaltoane.get(position);
+            Toast.makeText(this, palton.toString(), Toast.LENGTH_SHORT).show();
+        });
+
+        listViewPaltoane.setOnItemLongClickListener((parent, view, position, id) -> {
+            Palton paltonDeSters = listaPaltoane.get(position);
+
+            // Creăm un dialog de confirmare
+            new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Confirmare")
+                    .setMessage("Sigur vrei să ștergi paltonul " + paltonDeSters.getCuloare() + "?")
+                    .setPositiveButton("Da", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Ștergem obiectul din listă și notificăm adapterul
+                            listaPaltoane.remove(position);
+                            adapter.notifyDataSetChanged();
+                            Toast.makeText(MainActivity.this, "Paltonul a fost șters!", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .setNegativeButton("Nu", null)
+                    .show();
+
+            return true;
         });
     }
 
-    // Preia rezultatul din MainActivity2
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                // Preluăm rezultatul trimis din MainActivity2
-                String mesaj = data.getStringExtra("mesaj");
-
-                // Afisăm mesajul cu Toast
-                Toast.makeText(MainActivity.this, mesaj, Toast.LENGTH_SHORT).show();
-
-                // Preluăm fiecare valoare din mesaj
-                String[] values = mesaj.split("\n");
-
-                // Setăm valorile în TextBox-uri (EditText)
-                TextView editTextCuloare = findViewById(R.id.textView);
-                editTextCuloare.setText(values[0].replace("Culoare: ", ""));
-
-                TextView editTextImpermeabil = findViewById(R.id.textView2);
-                editTextImpermeabil.setText(values[1].replace("Impermeabil: ", ""));
-
-                TextView editTextMarime = findViewById(R.id.textView3);
-                editTextMarime.setText(values[2].replace("Mărime: ", ""));
-
-                TextView editTextPret = findViewById(R.id.textView4);
-                editTextPret.setText(values[3].replace("Preț: ", ""));
-
-                TextView editTextMaterial = findViewById(R.id.textView5);
-                editTextMaterial.setText(values[4].replace("Material: ", ""));
-            }
+        if (requestCode == REQUEST_CODE_ADD_PALTON && resultCode == RESULT_OK && data != null) {
+            // Preluăm obiectul Palton trimis din MainActivity2
+            Palton palton = data.getParcelableExtra("palton");
+            listaPaltoane.add(palton);
+            adapter.notifyDataSetChanged();
         }
     }
-
 }

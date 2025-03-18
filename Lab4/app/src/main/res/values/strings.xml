@@ -12,4 +12,5 @@
     <string name="material2">Bumbac</string>
     <string name="material3">Poliester</string>
     <string name="cevapret">300RON</string>
+    <string name="Data">Data:</string>
 </resources>
