@@ -11,7 +11,6 @@ public class Palton implements Parcelable {
     private String marime;
     private String pret;
     private String material;
-
     private Date dataAdaugare;
 
     public Palton(String culoare, boolean impermeabil, String marime, String pret, String material, Date data) {
@@ -20,7 +19,7 @@ public class Palton implements Parcelable {
         this.marime = marime;
         this.pret = pret;
         this.material = material;
-        this.dataAdaugare=data;
+        this.dataAdaugare = data;
     }
 
     protected Palton(Parcel in) {
@@ -29,6 +28,14 @@ public class Palton implements Parcelable {
         marime = in.readString();
         pret = in.readString();
         material = in.readString();
+
+        // Citirea datei din Parcel
+        long dateMillis = in.readLong();
+        if (dateMillis != 0) {
+            dataAdaugare = new Date(dateMillis);
+        } else {
+            dataAdaugare = new Date();
+        }
     }
 
     public static final Creator<Palton> CREATOR = new Creator<Palton>() {
@@ -55,6 +62,13 @@ public class Palton implements Parcelable {
         dest.writeString(marime);
         dest.writeString(pret);
         dest.writeString(material);
+
+        // Scrierea datei în Parcel
+        if (dataAdaugare != null) {
+            dest.writeLong(dataAdaugare.getTime());
+        } else {
+            dest.writeLong(0); // dacă data este null, trimitem 0
+        }
     }
 
     public String getCuloare() {
@@ -63,6 +77,10 @@ public class Palton implements Parcelable {
 
     public boolean isImpermeabil() {
         return impermeabil;
+    }
+
+    public Date getDataAdaugare() {
+        return dataAdaugare;
     }
 
     public String getMarime() {
@@ -76,9 +94,33 @@ public class Palton implements Parcelable {
     public String getMaterial() {
         return material;
     }
+
     @Override
     public String toString() {
-        return "Culoare: " + culoare + ", Mărime: " + marime + ", Preț: " + pret + ", Data Comanda:" + dataAdaugare;
+        return "Culoare: " + culoare + ", Mărime: " + marime + ", Preț: " + pret + ", Data Comanda: " + dataAdaugare;
     }
 
+    public void setCuloare(String culoare) {
+        this.culoare = culoare;
+    }
+
+    public void setDataAdaugare(Date dataAdaugare) {
+        this.dataAdaugare = dataAdaugare;
+    }
+
+    public void setMaterial(String material) {
+        this.material = material;
+    }
+
+    public void setPret(String pret) {
+        this.pret = pret;
+    }
+
+    public void setMarime(String marime) {
+        this.marime = marime;
+    }
+
+    public void setImpermeabil(boolean impermeabil) {
+        this.impermeabil = impermeabil;
+    }
 }
