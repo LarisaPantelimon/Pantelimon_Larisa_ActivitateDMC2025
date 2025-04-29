@@ -1,69 +1,93 @@
 package com.example.lab4;
 
-import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import android.content.Intent;
-
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
+import com.example.lab4.Entities.AppDatabase;
+import com.example.lab4.Entities.PaltonDao;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int REQUEST_CODE_ADD_PALTON = 1;
-    private static final int REQUEST_CODE_EDIT_PALTON = 2;  // Cod pentru editare
+    private static final int REQUEST_CODE_EDIT_PALTON = 2;
     private ArrayList<Palton> listaPaltoane;
     private CustomAdapter adapter;
     private ListView listViewPaltoane;
+    private AppDatabase db;
+    private PaltonDao paltonDao;
+    private ExecutorService executorService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        executorService = Executors.newSingleThreadExecutor();
+
+        db = AppDatabase.getInstance(getApplicationContext());
+        paltonDao = db.paltonDao();
+
+        SharedPreferences prefs = getSharedPreferences("app_settings", MODE_PRIVATE);
+        String dimensiune = prefs.getString("text_size", "16");
+        String culoare = prefs.getString("text_color", "black");
+        float fontSize = Float.parseFloat(dimensiune);
+
         listViewPaltoane = findViewById(R.id.listViewPaltoane);
         listaPaltoane = new ArrayList<>();
-        adapter = new CustomAdapter(this, listaPaltoane);
+        adapter = new CustomAdapter(this, listaPaltoane, fontSize, culoare);
         listViewPaltoane.setAdapter(adapter);
 
-        // Adăugarea unui nou obiect Palton
+        // Observăm datele din LiveData
+        LiveData<List<Palton>> paltoaneLiveData = paltonDao.getAll();
+        paltoaneLiveData.observe(this, new Observer<List<Palton>>() {
+            @Override
+            public void onChanged(List<Palton> paltoane) {
+                listaPaltoane.clear();
+                listaPaltoane.addAll(paltoane != null ? paltoane : new ArrayList<>());
+                adapter.notifyDataSetChanged();
+            }
+        });
+
+        Button buttonSettings = findViewById(R.id.buttonSettings);
+        buttonSettings.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
+
         findViewById(R.id.button).setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, MainActivity2.class);
             startActivityForResult(intent, REQUEST_CODE_ADD_PALTON);
         });
 
-        // Click pe elementul din listă pentru a edita
         listViewPaltoane.setOnItemClickListener((parent, view, position, id) -> {
             Palton palton = listaPaltoane.get(position);
-
-            // Se trimite obiectul și poziția la activitatea de editare
             Intent intent = new Intent(MainActivity.this, MainActivity2.class);
-            intent.putExtra("palton", palton);  // Transmiterea obiectului pentru editare
-            intent.putExtra("position", position);  // Transmiterea poziției
-            startActivityForResult(intent, REQUEST_CODE_EDIT_PALTON);  // Cod de editare
+            intent.putExtra("palton", palton);
+            intent.putExtra("position", position);
+            startActivityForResult(intent, REQUEST_CODE_EDIT_PALTON);
         });
 
-        // Ștergerea unui element
+        // Modificăm apăsarea lungă pentru a șterge obiectul
         listViewPaltoane.setOnItemLongClickListener((parent, view, position, id) -> {
-            Palton paltonDeSters = listaPaltoane.get(position);
+            Palton paltonToDelete = listaPaltoane.get(position);
 
-            new AlertDialog.Builder(MainActivity.this)
-                    .setTitle("Confirmare")
-                    .setMessage("Sigur vrei să ștergi paltonul " + paltonDeSters.getCuloare() + "?")
-                    .setPositiveButton("Da", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            listaPaltoane.remove(position);
-                            adapter.notifyDataSetChanged();
-                            Toast.makeText(MainActivity.this, "Paltonul a fost șters!", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .setNegativeButton("Nu", null)
-                    .show();
+            // Ștergem obiectul pe un fir de fundal
+            executorService.execute(() -> {
+                paltonDao.delete(paltonToDelete);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Palton șters!", Toast.LENGTH_SHORT).show();
+                });
+            });
 
             return true;
         });
@@ -76,23 +100,22 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             Palton palton = data.getParcelableExtra("palton");
 
-            if (requestCode == REQUEST_CODE_ADD_PALTON) {
-                // Adăugăm obiectul nou la listă
-                listaPaltoane.add(palton);
-                Toast.makeText(this, "Palton adăugat!", Toast.LENGTH_SHORT).show();
-            } else if (requestCode == REQUEST_CODE_EDIT_PALTON) {
-                // Preluăm poziția elementului modificat
-                int position = data.getIntExtra("position", -1);  // Preluăm poziția
-
-                if (position != -1) {
-                    // Înlocuim obiectul vechi cu cel nou
-                    listaPaltoane.set(position, palton);
-                    Toast.makeText(this, "Paltonul a fost modificat!", Toast.LENGTH_SHORT).show();
+            executorService.execute(() -> {
+                if (requestCode == REQUEST_CODE_ADD_PALTON) {
+                    paltonDao.insert(palton);
+                } else if (requestCode == REQUEST_CODE_EDIT_PALTON) {
+                    paltonDao.update(palton);
                 }
-            }
-
-            // Actualizăm adapterul pentru a reflecta modificările
-            adapter.notifyDataSetChanged();
+                runOnUiThread(() -> {
+                    Toast.makeText(this, requestCode == REQUEST_CODE_ADD_PALTON ? "Palton adăugat!" : "Paltonul a fost modificat!", Toast.LENGTH_SHORT).show();
+                });
+            });
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        executorService.shutdown();
     }
 }

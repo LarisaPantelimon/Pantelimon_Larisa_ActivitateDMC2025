@@ -1,7 +1,5 @@
 package com.example.lab4;
 
-import static android.content.ContentValues.TAG;
-
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,15 +7,17 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.RadioGroup;
-import android.widget.RadioButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.lab4.Palton;
+import com.example.lab4.Entities.AppDatabase;
+import com.example.lab4.Entities.PaltonDao;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -26,12 +26,10 @@ public class MainActivity2 extends AppCompatActivity {
 
     private TextView textViewSelectedDate;
     private EditText editTextCuloare;
-    private TextView editTextPret, editTextMaterial;
+    private EditText editTextPret;
     private Switch switchImpermeabil;
-    private RadioGroup radioGroupMarime;
     private Date selectedDate;
-
-    private Palton paltonToEdit; // Obiectul pe care îl edităm (dacă există)
+    private Palton paltonToEdit;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,22 +41,20 @@ public class MainActivity2 extends AppCompatActivity {
         Button buttonSave = findViewById(R.id.button2);
         textViewSelectedDate = findViewById(R.id.textView7);
         editTextCuloare = findViewById(R.id.editTextText);
-        editTextPret = findViewById(R.id.textView4);
-        editTextMaterial = findViewById(R.id.textView5);
+        //editTextPret = findViewById(R.id.textView4);
         switchImpermeabil = findViewById(R.id.switch1);
-        radioGroupMarime = findViewById(R.id.radioGroup);
 
         // Extragem obiectul Palton din Intent dacă există (pentru editare)
         paltonToEdit = getIntent().getParcelableExtra("palton");
 
-        // Verificăm dacă avem un palton pentru editare
+        // Inițializăm data curentă dacă nu există un palton de editat
         if (paltonToEdit != null) {
             // Prepopulăm câmpurile cu valorile obiectului existent
             editTextCuloare.setText(paltonToEdit.getCuloare());
-            editTextPret.setText(paltonToEdit.getPret());
-            //editTextMaterial.setText(paltonToEdit.getMaterial());
+            //editTextPret.setText(paltonToEdit.getPret());
             switchImpermeabil.setChecked(paltonToEdit.isImpermeabil());
 
+            // Prepopulăm CheckBox-urile pentru material
             CheckBox checkBoxLana = findViewById(R.id.checkBox);
             CheckBox checkBoxBumbac = findViewById(R.id.checkBox2);
             CheckBox checkBoxLanaBumbac = findViewById(R.id.checkBox3);
@@ -68,11 +64,12 @@ public class MainActivity2 extends AppCompatActivity {
             checkBoxLanaBumbac.setChecked(false);
 
             String material = paltonToEdit.getMaterial();
-            Log.d("Materialul meu ramas este:","Material "+ material);
+            Log.d("Materialul meu ramas este:", "Material " + material);
             checkBoxLana.setChecked(material.contains("Lana"));
             checkBoxBumbac.setChecked(material.contains("Bumbac"));
             checkBoxLanaBumbac.setChecked(material.contains("Poliester"));
 
+            // Prepopulăm mărimea
             String marime = paltonToEdit.getMarime();
             RadioButton radioButton1 = findViewById(R.id.radiobutton1);
             RadioButton radioButton2 = findViewById(R.id.radiobutton2);
@@ -81,7 +78,6 @@ public class MainActivity2 extends AppCompatActivity {
             radioButton2.setChecked(false);
             radioButton3.setChecked(false);
 
-// Setăm doar radio button-ul care corespunde mărimii preluate
             if (marime.equals("S")) {
                 radioButton1.setChecked(true);
             } else if (marime.equals("M")) {
@@ -91,30 +87,20 @@ public class MainActivity2 extends AppCompatActivity {
             }
 
             // Preluăm data existentă
-            selectedDate = paltonToEdit.getDataAdaugare();  // Preluăm data deja setată
-            Log.d("MainActivity2", "Data preluată din paltonToEdit: " + selectedDate.toString()); // Log pentru data preluată
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            try {
+                selectedDate = dateFormat.parse(paltonToEdit.getDataAdaugare());
+            } catch (ParseException e) {
+                e.printStackTrace();
+                selectedDate = Calendar.getInstance().getTime();
+            }
             textViewSelectedDate.setText("Data selectată: " + dateFormat.format(selectedDate));
-
-            // Modificăm titlul activității pentru a reflecta editarea
             setTitle("Editare Palton");
         } else {
-            // Dacă nu există niciun Palton, lăsăm câmpurile goale pentru adăugare
             setTitle("Adăugare Palton");
-
-            // Setăm data curentă dacă nu există un palton de editat
-            // Dacă paltonToEdit nu este null, folosim data existentă
-            if (paltonToEdit != null && paltonToEdit.getDataAdaugare() != null) {
-                selectedDate = paltonToEdit.getDataAdaugare();
-            } else {
-                // Dacă nu există o dată, folosim data curentă
-                Calendar calendar = Calendar.getInstance();
-                selectedDate = calendar.getTime();
-            }
-
+            selectedDate = Calendar.getInstance().getTime();
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
             textViewSelectedDate.setText("Data selectată: " + dateFormat.format(selectedDate));
-
         }
 
         // Configurăm comportamentul butonului de selectare a datei
@@ -136,7 +122,6 @@ public class MainActivity2 extends AppCompatActivity {
                     year, month, day
             );
 
-            // Setăm limita maximă a datei pentru a nu selecta o dată viitoare
             datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
             datePickerDialog.show();
         });
@@ -144,16 +129,15 @@ public class MainActivity2 extends AppCompatActivity {
         // Salvăm obiectul Palton (fie adăugăm, fie modificăm)
         buttonSave.setOnClickListener(v -> {
             String culoare = editTextCuloare.getText().toString();
-            String pret = editTextPret.getText().toString();
-            //String material = editTextMaterial.getText().toString();
+            //String pret = editTextPret.getText().toString();
             boolean impermeabil = switchImpermeabil.isChecked();
 
+            // Construim materialul din CheckBox-uri
             CheckBox checkBoxLana = findViewById(R.id.checkBox);
             CheckBox checkBoxBumbac = findViewById(R.id.checkBox2);
             CheckBox checkBoxLanaBumbac = findViewById(R.id.checkBox3);
 
             StringBuilder materialBuilder = new StringBuilder();
-
             if (checkBoxLana.isChecked()) {
                 materialBuilder.append("Lana, ");
             }
@@ -163,58 +147,74 @@ public class MainActivity2 extends AppCompatActivity {
             if (checkBoxLanaBumbac.isChecked()) {
                 materialBuilder.append("Poliester, ");
             }
-
-            // Eliminăm ultima virgulă și spațiu, dacă există
             if (materialBuilder.length() > 0) {
                 materialBuilder.setLength(materialBuilder.length() - 2);
             }
-
             String material = materialBuilder.toString();
 
-            // Obținem mărimea selectată din RadioGroup
+            // Validăm câmpurile
+            if (culoare.isEmpty() ) {
+                Toast.makeText(this, "Completați culoarea și prețul!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (material.isEmpty()) {
+                Toast.makeText(this, "Selectați cel puțin un material!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Obținem mărimea selectată
             RadioButton radioButton1 = findViewById(R.id.radiobutton1);
             RadioButton radioButton2 = findViewById(R.id.radiobutton2);
             RadioButton radioButton3 = findViewById(R.id.radiobutton3);
 
-            Log.d("Material final", "Materialul selectat este: " + material);
-            // Verificăm care radio button este selectat
             String marime = "";
             if (radioButton1.isChecked()) {
-                marime = "S";  // Radio button-ul 1 este selectat
+                marime = "S";
             } else if (radioButton2.isChecked()) {
-                marime = "M";  // Radio button-ul 2 este selectat
+                marime = "M";
             } else if (radioButton3.isChecked()) {
-                marime = "L";  // Radio button-ul 3 este selectat
+                marime = "L";
             }
 
-            // Log pentru a vedea ce mărime am selectat
-            Log.d("Ceva.......", "Marimea pe care o setez: " + marime);
+            if (marime.isEmpty()) {
+                Toast.makeText(this, "Selectați o mărime!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+            String formattedDate = formatter.format(selectedDate);
+
             // Dacă edităm un obiect existent, actualizăm valorile acestuia
             if (paltonToEdit != null) {
                 paltonToEdit.setCuloare(culoare);
-                paltonToEdit.setPret(pret);
+                paltonToEdit.setPret("300");
                 paltonToEdit.setMaterial(material);
                 paltonToEdit.setImpermeabil(impermeabil);
                 paltonToEdit.setMarime(marime);
-
-                paltonToEdit.setDataAdaugare(selectedDate); // Menținem data la modificare
+                paltonToEdit.setDataAdaugare(formattedDate);
             } else {
-                // Dacă nu există un obiect, creăm unul nou
-                paltonToEdit = new Palton(culoare, impermeabil, marime, pret, material, selectedDate);
+                // Creăm un obiect nou pentru adăugare
+                paltonToEdit = new Palton(culoare, impermeabil, marime, "300", material, selectedDate);
             }
 
-            // Trimitem obiectul (adăugat sau modificat) înapoi către MainActivity
-            Intent intent = new Intent();
-            intent.putExtra("palton", paltonToEdit);
+            // Salvăm în baza de date
+            AppDatabase db = AppDatabase.getInstance(getApplicationContext());
+            PaltonDao dao = db.paltonDao();
 
-            // Dacă edităm, trimitem și poziția elementului
-            int position = getIntent().getIntExtra("position", -1);
-            if (position != -1) {
-                intent.putExtra("position", position);
-            }
-
-            setResult(RESULT_OK, intent);
-            finish();
+            AppDatabase.databaseWriteExecutor.execute(() -> {
+                if (getIntent().hasExtra("palton")) {
+                    dao.update(paltonToEdit);
+                } else {
+                    dao.insert(paltonToEdit);
+                }
+                runOnUiThread(() -> {
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("palton", paltonToEdit);
+                    setResult(RESULT_OK, resultIntent);
+                    finish();
+                });
+            });
         });
     }
 }

@@ -3,39 +3,60 @@ package com.example.lab4;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
+@Entity(tableName = "paltoane")
 public class Palton implements Parcelable {
-    private String culoare;
-    private boolean impermeabil;
-    private String marime;
-    private String pret;
-    private String material;
-    private Date dataAdaugare;
 
+    @PrimaryKey(autoGenerate = true)
+    public int id;
+
+    @ColumnInfo(name = "culoare")
+    private String culoare;
+
+    @ColumnInfo(name = "impermeabil")
+    private boolean impermeabil;
+
+    @ColumnInfo(name = "marime")
+    private String marime;
+
+    @ColumnInfo(name = "pret")
+    private String pret;
+
+    @ColumnInfo(name = "material")
+    private String material;
+
+    @ColumnInfo(name = "dataAdaugare")
+    private String dataAdaugare;
+
+    // Constructorul public implicit, necesar pentru Room
+    public Palton() {
+    }
+
+    // Constructorul principal cu parametri
     public Palton(String culoare, boolean impermeabil, String marime, String pret, String material, Date data) {
         this.culoare = culoare;
         this.impermeabil = impermeabil;
         this.marime = marime;
         this.pret = pret;
         this.material = material;
-        this.dataAdaugare = data;
+        SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        this.dataAdaugare = formatter.format(data);
     }
 
+    // Constructorul pentru Parcelable
     protected Palton(Parcel in) {
         culoare = in.readString();
         impermeabil = in.readByte() != 0;
         marime = in.readString();
         pret = in.readString();
         material = in.readString();
-
-        // Citirea datei din Parcel
-        long dateMillis = in.readLong();
-        if (dateMillis != 0) {
-            dataAdaugare = new Date(dateMillis);
-        } else {
-            dataAdaugare = new Date();
-        }
+        dataAdaugare = in.readString();
     }
 
     public static final Creator<Palton> CREATOR = new Creator<Palton>() {
@@ -62,15 +83,10 @@ public class Palton implements Parcelable {
         dest.writeString(marime);
         dest.writeString(pret);
         dest.writeString(material);
-
-        // Scrierea datei în Parcel
-        if (dataAdaugare != null) {
-            dest.writeLong(dataAdaugare.getTime());
-        } else {
-            dest.writeLong(0); // dacă data este null, trimitem 0
-        }
+        dest.writeString(dataAdaugare);
     }
 
+    // Getteri și setteri
     public String getCuloare() {
         return culoare;
     }
@@ -79,7 +95,7 @@ public class Palton implements Parcelable {
         return impermeabil;
     }
 
-    public Date getDataAdaugare() {
+    public String getDataAdaugare() {
         return dataAdaugare;
     }
 
@@ -95,16 +111,11 @@ public class Palton implements Parcelable {
         return material;
     }
 
-    @Override
-    public String toString() {
-        return "Culoare: " + culoare + ", Mărime: " + marime + ", Preț: " + pret + ", Data Comanda: " + dataAdaugare;
-    }
-
     public void setCuloare(String culoare) {
         this.culoare = culoare;
     }
 
-    public void setDataAdaugare(Date dataAdaugare) {
+    public void setDataAdaugare(String dataAdaugare) {
         this.dataAdaugare = dataAdaugare;
     }
 
@@ -122,5 +133,10 @@ public class Palton implements Parcelable {
 
     public void setImpermeabil(boolean impermeabil) {
         this.impermeabil = impermeabil;
+    }
+
+    @Override
+    public String toString() {
+        return "Culoare: " + culoare + ", Mărime: " + marime + ", Preț: " + pret + ", Data Comanda: " + dataAdaugare;
     }
 }
