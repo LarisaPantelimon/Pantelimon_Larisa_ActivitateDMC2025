@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Meteo</string>
+    <string-array name="forecast_days">
+        <item>1 day</item>
+        <item>5 days</item>
+        <item>10 days</item>
+    </string-array>
 </resources>
