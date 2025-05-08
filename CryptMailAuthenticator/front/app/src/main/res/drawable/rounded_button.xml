@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Set the background color (purple in this case) -->
+    <solid android:color="@color/purple_500"/> <!-- Use your purple color here -->
+
+    <!-- Set the corner radius to make it rounded -->
+    <corners android:radius="28dp"/> <!-- Adjust the radius for the rounded corners -->
+
+    <!-- Optional: Add a stroke for the border -->
+    <stroke android:color="#6200EE" android:width="2dp"/> <!-- Optional border -->
+</shape>

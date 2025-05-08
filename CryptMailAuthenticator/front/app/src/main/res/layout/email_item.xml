@@ -1,0 +1,53 @@
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/email_item_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginVertical="4dp"
+    android:layout_marginHorizontal="8dp"
+    android:elevation="4dp"
+    app:cardCornerRadius="12dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <!-- Red Dot - Positioned to the left of email -->
+        <View
+            android:id="@+id/red_dot"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="-4dp"
+            android:layout_marginTop="6dp"
+            android:layout_marginEnd="1dp"
+            android:background="@drawable/red_dot_background"
+            android:visibility="gone"/>
+        <!-- Email Address - Positioned to the right of red dot -->
+        <TextView
+            android:id="@+id/email_text_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/red_dot"
+            android:layout_centerVertical="true"
+            android:text="email@example.com"
+            android:layout_marginLeft="4dp"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+
+        <!-- Delete Button - Stays on the right -->
+        <ImageButton
+            android:id="@+id/delete_button_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/close"
+            app:tint="#FF0000"/>
+    </RelativeLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Meteo"
+rootProject.name = "licenta_mobile"
 include(":app")
-include(":app")
+ 
