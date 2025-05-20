@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_compose"
+        android:title="Compune" />
+    <item
+        android:id="@+id/nav_inbox"
+        android:title="Mesaje primite" />
+    <item
+        android:id="@+id/nav_location"
+        android:title="Locație" />
+    <item
+        android:id="@+id/nav_stats"
+        android:title="Statistici" />
+    <item
+        android:id="@+id/nav_user_details"
+        android:title="Detalii utilizator" />
+    <item
+        android:id="@+id/nav_logout"
+        android:title="Deconectare" />
+</menu>

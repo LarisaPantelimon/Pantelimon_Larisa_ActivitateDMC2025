@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="primaryColor">#E681C4</color> <!-- Indigo -->
+    <color name="primaryDarkColor">#303F9F</color> <!-- Darker Indigo -->
+    <color name="secondaryColor">#FF4081</color> <!-- Pink -->
+    <color name="secondaryDarkColor">#C51162</color> <!-- Darker Pink -->
+    <color name="backgroundOverlay">#F0C4DC</color> <!-- Semi-transparent white for readability -->
+</resources>
